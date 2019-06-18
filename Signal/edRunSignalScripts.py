@@ -15,9 +15,9 @@ sigPlotsOnly = False
 #isSubmitted = True
 #phoSystOnly = True
 #useDCB = True
-#sigFitOnly = True
+sigFitOnly = True
 #packageOnly = True
-sigPlotsOnly = True
+#sigPlotsOnly = True
 
 print 'About to run signal scripts'
 print 'isSubmitted = %s, phoSystOnly = %s, sigFitOnly = %s, sigPlotsOnly = %s'%(str(isSubmitted), str(phoSystOnly), str(sigFitOnly), str(sigPlotsOnly))
@@ -27,7 +27,7 @@ print 'isSubmitted = %s, phoSystOnly = %s, sigFitOnly = %s, sigPlotsOnly = %s'%(
 ext = 'approvalFinal2016'
 print 'ext = %s'%ext
 
-baseFilePath  = '/vols/cms/es811/FinalFits/ws_%s/'%ext
+baseFilePath  = '/afs/cern.ch/work/e/escott/public/FinalFits/ForNick/ws_approvalFinal2016/'
 fileNames     = []
 for root,dirs,files in walk(baseFilePath):
   for fileName in files: 

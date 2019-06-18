@@ -12,12 +12,12 @@ int Normalization_13TeV::Init(int sqrtS){
     if (globeRt !=0){
         globeRt = globeRt+"/src/flashggFinalFit/Signal";
     }
-    if( ! TPython::Exec(Form("buildSMHiggsSignalXSBR = imp.load_source('*', '%s/python/buildSMHiggsSignalXSBR.py')",globeRt.c_str())) ) {
+    if( ! TPython::Exec(Form("buildSMHiggsSignalXSBR = imp.load_source('*', '/afs/cern.ch/work/n/nckw/hgg/CMSSW_8_1_0/src/flashggFinalFit/Signal/python/buildSMHiggsSignalXSBR.py')")) ) {
         std::cout<<  "[ERROR] Importing buildSMHiggsSignalXSBR from python failed. exit." << std::endl;
         return 0;
     }
     TPython::Eval(Form("buildSMHiggsSignalXSBR.Init%dTeV()", sqrtS));
-    
+     
     for (double mH=120;mH<130.05;mH+=0.1){ // breaks when extended beyond 130
         double valBR           = (double)TPython::Eval(Form("buildSMHiggsSignalXSBR.getBR(%f)",mH));
         double valXSggH        = (double)TPython::Eval(Form("buildSMHiggsSignalXSBR.getXS(%f,'%s')",mH,"ggH"));
@@ -96,6 +96,7 @@ int Normalization_13TeV::Init(int sqrtS){
         XSectionMap_THW[mH]                      = valXStHW;
         XSectionMap_GGZH[mH]                     = valXSggZH;
     }
+    return 1;
 }
 
 TGraph * Normalization_13TeV::GetSigmaGraph(TString process)

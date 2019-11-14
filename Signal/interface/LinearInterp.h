@@ -10,6 +10,7 @@
 #include "RooRealVar.h"
 #include "RooAbsReal.h"
 #include "RooAddition.h"
+#include "RooFormulaVar.h"
 #include "HiggsAnalysis/CombinedLimit/interface/RooSpline1D.h"
 
 class LinearInterp {
@@ -26,6 +27,8 @@ class LinearInterp {
 
   private:
     RooRealVar *MH;
+    RooRealVar *deltaMH;
+    RooFormulaVar *finalMH;
     std::map<int,std::map<std::string,RooRealVar*> > fitParams;
     bool doSecondaryModels;
     bool secondaryModelVarsSet;

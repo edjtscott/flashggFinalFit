@@ -75,6 +75,10 @@ FinalModelConstruction::FinalModelConstruction( std::vector<int> massList, RooRe
     allMH_ = massList;
   }
 
+  //FIXME testing out the deltaMH thing
+	deltaMH = new RooRealVar("deltaMH","deltaMH",0.,0.,6.);
+  finalMH = new RooFormulaVar("finalMH","finalMH","@0+@1",RooArgList(*MH,*deltaMH));
+
   //set sqrts
 	if (sqrts_ ==7) is2011_=1;
 	if (sqrts_ ==8) is2012_=1;
@@ -619,7 +623,8 @@ RooAbsReal* FinalModelConstruction::getMeanWithPhotonSyst(RooAbsReal *dm, string
 	RooArgList *dependents = new RooArgList();
 	if (isMH2) dependents->add(*MH_2);
 	else if (isMHSM) dependents->add(*MH_SM);
-	else dependents->add(*MH); // MH sits at @0
+	else dependents->add(*finalMH); // MH sits at @0 // ED FIXME
+	//else dependents->add(*MH); // MH sits at @0
 	dependents->add(*dm); // dm sits at @1
 
 	// check for global scales first
@@ -1316,7 +1321,8 @@ RooSpline1D* FinalModelConstruction::graphToSpline(string name, TGraph *graph){
     xValues.push_back(mh);
     yValues.push_back(graph->Eval(mh));
   }
-  RooSpline1D *res = new RooSpline1D(name.c_str(),name.c_str(),*MH,xValues.size(),&(xValues[0]),&(yValues[0]));
+  //RooSpline1D *res = new RooSpline1D(name.c_str(),name.c_str(),*MH,xValues.size(),&(xValues[0]),&(yValues[0]));
+  RooSpline1D *res = new RooSpline1D(name.c_str(),name.c_str(),*finalMH,xValues.size(),&(xValues[0]),&(yValues[0])); //ED FIXME
   return res;
 }
 

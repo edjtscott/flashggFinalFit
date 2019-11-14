@@ -14,6 +14,8 @@ LinearInterp::LinearInterp(RooRealVar *MHvar, vector<int> massList, map<int,map<
   allMH_(massList),
   verbosity_(0)
 {
+	deltaMH = new RooRealVar("deltaMH","deltaMH",0.,0.,6.);
+  finalMH = new RooFormulaVar("finalMH","finalMH","@0+@1",RooArgList(*MH,*deltaMH));
  // allMH_ = getAllMH();
 }
 
@@ -68,7 +70,8 @@ void LinearInterp::interpolate(){
     TString splineName = paramNameTemplates[iParam]; 
     splineName =  splineName.ReplaceAll(TString(Form("_mh%d",mh0)),TString(""));  // just remove the reference to the MH value in param name
     //it's just that easy: plug the x,y values of the param into the Spline constructor
-    RooSpline1D *paramSpline = new RooSpline1D(splineName.Data(),splineName.Data(),*MH,mhValues.size(),&(mhValues[0]),&(paramValues[0]),"LINEAR");
+    //RooSpline1D *paramSpline = new RooSpline1D(splineName.Data(),splineName.Data(),*MH,mhValues.size(),&(mhValues[0]),&(paramValues[0]),"LINEAR");
+    RooSpline1D *paramSpline = new RooSpline1D(splineName.Data(),splineName.Data(),*finalMH,mhValues.size(),&(mhValues[0]),&(paramValues[0]),"LINEAR"); // ED FIXME
     // and save it for later use.
     splines.insert(pair<string,RooSpline1D*>(paramSpline->GetName(),paramSpline));
     if (verbosity_) std::cout << "[INFO] Linear Interp: preparing this spline " << paramSpline->GetName() << std::endl;

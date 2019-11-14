@@ -71,6 +71,8 @@ class FinalModelConstruction {
     
     RooRealVar *mass;
     RooRealVar *MH;
+    RooRealVar *deltaMH;
+    RooFormulaVar *finalMH;
     RooRealVar *intLumi;
     int mhLow_;
     int mhHigh_;

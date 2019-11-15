@@ -49,6 +49,8 @@ class SimultaneousFit {
 
     RooRealVar *mass;
     RooRealVar *MH;
+    RooRealVar *deltaMH;
+    RooFormulaVar *finalMH;
     RooArgSet *listOfPolyVars_;
     std::map<int,RooAbsPdf*> allPdfs;
     std::map<int,RooDataSet*> datasets; 

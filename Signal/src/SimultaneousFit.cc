@@ -48,6 +48,8 @@ SimultaneousFit::SimultaneousFit(RooRealVar *massVar, RooRealVar *MHvar, int mhL
   }else{
     allMH_ = massList;
   }
+	deltaMH = new RooRealVar("deltaMH","deltaMH",0.,0.,6.);
+  finalMH = new RooFormulaVar("finalMH","finalMH","@0+@1",RooArgList(*MH,*deltaMH));
 }
 
 SimultaneousFit::~SimultaneousFit(){}
@@ -788,7 +790,8 @@ std::map<std::string,RooSpline1D*> SimultaneousFit::getSplines(){
       yValues.push_back(polyVar->getVal());
     }
     //make the spline
-    RooSpline1D *thisSpline = new RooSpline1D(polyVar->GetName(),polyVar->GetName(),*MH,xValues.size(),&(xValues[0]),&(yValues[0]));
+    //RooSpline1D *thisSpline = new RooSpline1D(polyVar->GetName(),polyVar->GetName(),*MH,xValues.size(),&(xValues[0]),&(yValues[0]));
+    RooSpline1D *thisSpline = new RooSpline1D(polyVar->GetName(),polyVar->GetName(),*finalMH,xValues.size(),&(xValues[0]),&(yValues[0])); //ED FIXME
     splines.insert(pair<string,RooSpline1D*>(thisSpline->GetName(),thisSpline));
   }
   return splines;

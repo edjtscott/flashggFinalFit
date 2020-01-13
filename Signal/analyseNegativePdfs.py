@@ -1,8 +1,13 @@
 from os import system
 
-ext='preappFinal2016'
+#year='2016'
+year='2017'
+#year='2018'
 
-fileName = 'potentialNegPdfs_%s.txt'%ext
+ext = 'stage1_1_%s'%year
+
+#fileName = 'potentialNegPdfs_%s.txt'%ext
+fileName = 'testNegs_%s.txt'%year
 with open(fileName, 'r') as f:
   theInput = f.read().splitlines()
 

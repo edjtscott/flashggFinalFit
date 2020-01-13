@@ -18,6 +18,7 @@ import ROOT as r
 #  r.gROOT.ProcessLine(".L quadInterpolate.C+g")
 #  from ROOT import quadInterpolate
 r.gROOT.ProcessLine(".L $CMSSW_BASE/lib/$SCRAM_ARCH/libHiggsAnalysisCombinedLimit.so")
+r.gROOT.SetBatch(True)
 #r.gROOT.ProcessLine(".L ../libLoopAll.so")
 ###############################################################################
 
@@ -233,7 +234,7 @@ print toVeto
 ## SHAPE SYSTEMATIC SETUP  ####################################################
 ###############################################################################
 file_ext = 'mva'
-out_ext = 'stage1_1_2016'
+out_ext = 'stage1_1_2016' #ED FIXME
 dataFile = 'Inputs/%s/CMS-HGG_%s_%dTeV_multipdf.root'%(out_ext,file_ext,sqrts)
 bkgFile = 'Inputs/%s/CMS-HGG_%s_%dTeV_multipdf.root'%(out_ext,file_ext,sqrts)
 dataWS = 'multipdf'
@@ -320,131 +321,131 @@ theorySystAbsScale['ggZH_hgg'] =       [0.0,                  0.0,              
 ## Calculate overall effect of theory systematics
 ##############################################################################
 
-result ={}
-mass = inWS.var("CMS_hgg_mass")
-norm_factors_file = open('norm_factors_new.py','w')
-for proc in options.procs:
-  if proc in bkgProcs: continue
-  for name,details in theorySyst.iteritems(): #wh_130_13TeV_UntaggedTag_1_pdfWeights
-    norm_factors_file.write("%s_%s = ["%(proc,name.replace("Weight",""))) 
-    result["%s_%s"%(proc,name)] = {}
-    for iDeet, deet in enumerate(details):
-      if isinstance(deet,list):
-        for n in deet:
-          runningTotal_nom=0
-          runningTotal_up=0
-          weight = r.RooRealVar("weight","weight",0)
-          weight_up = inWS.var("%s_%d"%(name,n)) # eg pdfWeight_1
-          if (weight_up==None) : 
-            n=-999
-            continue # this will break the while loop, so we just stop when we are out of pdfWeights, scaleWeights or alphaSWeights 
-          weight_central = inWS.var("centralObjectWeight") 
-          weight_sumW = inWS.var("sumW")
-          for cat in inclusiveCats:
-            data_nominal = inWS.data("%s_%d_13TeV_%s_pdfWeights"%(flashggProcs[proc],options.mass,cat))
-            print 'on proc %s, cat %s, looking for dataset %s'%(proc, cat, "%s_%d_13TeV_%s_pdfWeights"%(flashggProcs[proc],options.mass,cat))
-            data_nominal_sum = data_nominal.sumEntries()
-            data_up = data_nominal.emptyClone();
-            data_nominal_new = data_nominal.emptyClone();
-            zeroWeightEvents=0.
-            for i in range(0,int(data_nominal.numEntries())):
-               mass.setVal(data_nominal.get(i).getRealValue("CMS_hgg_mass"))
-               w_nominal =data_nominal.weight()
-               w_up = data_nominal.get(i).getRealValue("%s_%d"%(name,n))
-               #w_central = data_nominal.get(i).getRealValue("centralObjectWeight") #FIXME ed testing
-               w_central = data_nominal.get(i).getRealValue("scaleWeight_0") #sneaky fix as it doesn't look like central weight is beign propagated correctly in these cases.
-               sumW = data_nominal.get(i).getRealValue("sumW")
-               if (w_central) : print name, n, proc, cat, "entry ", i, " w_nominal ", w_nominal, " w_central " , w_central, " w_up ", w_up , " w_nominal*(w_up/w_central) ", w_nominal*(w_up/w_central)
-               #FIXME ed testing
-               #if (abs(w_central)<1E-4 or abs(w_nominal)<1E-4 or w_nominal<=0. or math.isnan(w_up) or w_central<=0. or w_up<=0. or w_up>10.0): continue
-               if (abs(w_central)<1E-4 or abs(w_nominal)<1E-4 or w_nominal<=0. or math.isnan(w_central) or math.isnan(w_up) or w_central<=0. or w_up<=0. or w_up>10.0): 
-                 w_up = 1.
-                 w_central = 1.
-               #FIXME ed testing
-               if abs(w_up/w_central - 1.) > 0.5: 
-                 w_up = 1.
-                 w_central = 1.
-               weight_up.setVal(w_nominal*(w_up/w_central))
-               data_up.add(r.RooArgSet(mass,weight_up),weight_up.getVal())
-               data_nominal_new.add(r.RooArgSet(mass,weight),w_nominal)
-            runningTotal_nom_old = runningTotal_nom
-            runningTotal_up_old = runningTotal_up
-            runningTotal_nom =runningTotal_nom + data_nominal.sumEntries() 
-            runningTotal_up =runningTotal_up + data_up.sumEntries()
-            if (runningTotal_nom): effect =runningTotal_up/runningTotal_nom
-            else: effect =-1
-            print name, n, proc, cat, " runningTotal_up ", runningTotal_up, " runningTotal_up_old ", runningTotal_up_old, " data_up.sumEntries() ", data_up.sumEntries() , "runningTotal_nom", runningTotal_nom, " runningTotal_nom_old ", runningTotal_nom_old , " data_nominal.sumEntries() ",  data_nominal.sumEntries(), " effect ", effect
-          effect=-1
-          if (runningTotal_nom==runningTotal_up): effect=1
-          else: effect = runningTotal_up/runningTotal_nom
-          if (effect <0.5 or effect > 2.0) : 
-            #exit ("effect is greater than a factor of two - shouldn't happen, exiting...")
-            print "effect is greater than a factor of two - shouldn't happen, exiting...\n"
-            #exit ("effect is greater than a factor of two for proc %s name %s - shouldn't happen, exiting..."%(proc,name))
-          if (iDeet==0) :norm_factors_file.write(" %.3f"%effect)
-          else: norm_factors_file.write(", %.3f"%effect)
-          result["%s_%s"%(proc,name)][n] = effect
-      elif isinstance(deet,str):
-        if deet.count('THU'):
-          runningTotal_nom=0
-          runningTotal_up=0
-          runningTotal_down=0
-          weight = r.RooRealVar("weight","weight",0)
-          weight_up = inWS.var("%sUp01sigma"%(name))
-          weight_down = inWS.var("%sDown01sigma"%(name))
-          weight_central = inWS.var("centralObjectWeight") 
-          weight_sumW = inWS.var("sumW")
-          for cat in inclusiveCats:
-            data_nominal = inWS.data("%s_%d_13TeV_%s"%(flashggProcs[proc],options.mass,cat))
-            print 'on proc %s, cat %s, looking for dataset %s'%(proc, cat, "%s_%d_13TeV_%s"%(flashggProcs[proc],options.mass,cat))
-            data_nominal_sum = data_nominal.sumEntries()
-            data_up = data_nominal.emptyClone();
-            data_down = data_nominal.emptyClone();
-            data_nominal_new = data_nominal.emptyClone();
-            zeroWeightEvents=0.
-            for i in range(0,int(data_nominal.numEntries())):
-               mass.setVal(data_nominal.get(i).getRealValue("CMS_hgg_mass"))
-               w_nominal =data_nominal.weight()
-               w_up = data_nominal.get(i).getRealValue("%sUp01sigma"%(name))
-               w_down = data_nominal.get(i).getRealValue("%sDown01sigma"%(name))
-               w_central = data_nominal.get(i).getRealValue("centralObjectWeight")
-               sumW = data_nominal.get(i).getRealValue("sumW")
-               if (abs(w_central)<1E-4 or abs(w_nominal)<1E-4 or w_nominal<=0. or math.isnan(w_central) or math.isnan(w_up) or math.isnan(w_down) or w_central<=0. or w_up<=0. or w_up>10.0 or w_down<=0. or w_down>10.0): 
-                 w_up = 1.
-                 w_down = 1.
-                 w_central = 1.
-               if abs(w_up/w_central - 1.) > 0.5: 
-                 w_up = 1.
-                 w_central = 1.
-               if abs(w_down/w_central - 1.) > 0.5: 
-                 w_down = 1.
-                 w_central = 1.
-               weight_up.setVal(w_nominal*(w_up/w_central))
-               weight_down.setVal(w_nominal*(w_down/w_central))
-               data_up.add(r.RooArgSet(mass,weight_up),weight_up.getVal())
-               data_down.add(r.RooArgSet(mass,weight_down),weight_down.getVal())
-               data_nominal_new.add(r.RooArgSet(mass,weight),w_nominal)
-            runningTotal_nom_old = runningTotal_nom
-            runningTotal_up_old = runningTotal_up
-            runningTotal_down_old = runningTotal_down
-            runningTotal_nom =runningTotal_nom + data_nominal.sumEntries() 
-            runningTotal_up =runningTotal_up + data_up.sumEntries()
-            runningTotal_down =runningTotal_down + data_down.sumEntries()
-          effectUp=-1
-          effectDown=-1
-          if (runningTotal_nom==runningTotal_up): effectUp=1
-          else: effectUp = runningTotal_up/runningTotal_nom
-          if (runningTotal_nom==runningTotal_down): effectDown=1
-          else: effectDown = runningTotal_down/runningTotal_nom
-          norm_factors_file.write("%.3f"%effectUp)
-          norm_factors_file.write(", %.3f"%effectDown)
-          result["%s_%s"%(proc,name)]['Up'] = effectUp
-          result["%s_%s"%(proc,name)]['Down'] = effectDown
-    norm_factors_file.write("]\n")
-    #print result
-#exit(1)
-norm_factors_file.close()
-theoryNormFactors=result
+#result ={}
+#mass = inWS.var("CMS_hgg_mass")
+#norm_factors_file = open('norm_factors_new.py','w')
+#for proc in options.procs:
+#  if proc in bkgProcs: continue
+#  for name,details in theorySyst.iteritems(): #wh_130_13TeV_UntaggedTag_1_pdfWeights
+#    norm_factors_file.write("%s_%s = ["%(proc,name.replace("Weight",""))) 
+#    result["%s_%s"%(proc,name)] = {}
+#    for iDeet, deet in enumerate(details):
+#      if isinstance(deet,list):
+#        for n in deet:
+#          runningTotal_nom=0
+#          runningTotal_up=0
+#          weight = r.RooRealVar("weight","weight",0)
+#          weight_up = inWS.var("%s_%d"%(name,n)) # eg pdfWeight_1
+#          if (weight_up==None) : 
+#            n=-999
+#            continue # this will break the while loop, so we just stop when we are out of pdfWeights, scaleWeights or alphaSWeights 
+#          weight_central = inWS.var("centralObjectWeight") 
+#          weight_sumW = inWS.var("sumW")
+#          for cat in inclusiveCats:
+#            data_nominal = inWS.data("%s_%d_13TeV_%s_pdfWeights"%(flashggProcs[proc],options.mass,cat))
+#            print 'on proc %s, cat %s, looking for dataset %s'%(proc, cat, "%s_%d_13TeV_%s_pdfWeights"%(flashggProcs[proc],options.mass,cat))
+#            data_nominal_sum = data_nominal.sumEntries()
+#            data_up = data_nominal.emptyClone();
+#            data_nominal_new = data_nominal.emptyClone();
+#            zeroWeightEvents=0.
+#            for i in range(0,int(data_nominal.numEntries())):
+#               mass.setVal(data_nominal.get(i).getRealValue("CMS_hgg_mass"))
+#               w_nominal =data_nominal.weight()
+#               w_up = data_nominal.get(i).getRealValue("%s_%d"%(name,n))
+#               #w_central = data_nominal.get(i).getRealValue("centralObjectWeight") #FIXME ed testing
+#               w_central = data_nominal.get(i).getRealValue("scaleWeight_0") #sneaky fix as it doesn't look like central weight is beign propagated correctly in these cases.
+#               sumW = data_nominal.get(i).getRealValue("sumW")
+#               if (w_central) : print name, n, proc, cat, "entry ", i, " w_nominal ", w_nominal, " w_central " , w_central, " w_up ", w_up , " w_nominal*(w_up/w_central) ", w_nominal*(w_up/w_central)
+#               #FIXME ed testing
+#               #if (abs(w_central)<1E-4 or abs(w_nominal)<1E-4 or w_nominal<=0. or math.isnan(w_up) or w_central<=0. or w_up<=0. or w_up>10.0): continue
+#               if (abs(w_central)<1E-4 or abs(w_nominal)<1E-4 or w_nominal<=0. or math.isnan(w_central) or math.isnan(w_up) or w_central<=0. or w_up<=0. or w_up>10.0): 
+#                 w_up = 1.
+#                 w_central = 1.
+#               #FIXME ed testing
+#               if abs(w_up/w_central - 1.) > 0.5: 
+#                 w_up = 1.
+#                 w_central = 1.
+#               weight_up.setVal(w_nominal*(w_up/w_central))
+#               data_up.add(r.RooArgSet(mass,weight_up),weight_up.getVal())
+#               data_nominal_new.add(r.RooArgSet(mass,weight),w_nominal)
+#            runningTotal_nom_old = runningTotal_nom
+#            runningTotal_up_old = runningTotal_up
+#            runningTotal_nom =runningTotal_nom + data_nominal.sumEntries() 
+#            runningTotal_up =runningTotal_up + data_up.sumEntries()
+#            if (runningTotal_nom): effect =runningTotal_up/runningTotal_nom
+#            else: effect =-1
+#            print name, n, proc, cat, " runningTotal_up ", runningTotal_up, " runningTotal_up_old ", runningTotal_up_old, " data_up.sumEntries() ", data_up.sumEntries() , "runningTotal_nom", runningTotal_nom, " runningTotal_nom_old ", runningTotal_nom_old , " data_nominal.sumEntries() ",  data_nominal.sumEntries(), " effect ", effect
+#          effect=-1
+#          if (runningTotal_nom==runningTotal_up): effect=1
+#          else: effect = runningTotal_up/runningTotal_nom
+#          if (effect <0.5 or effect > 2.0) : 
+#            #exit ("effect is greater than a factor of two - shouldn't happen, exiting...")
+#            print "effect is greater than a factor of two - shouldn't happen, exiting...\n"
+#            #exit ("effect is greater than a factor of two for proc %s name %s - shouldn't happen, exiting..."%(proc,name))
+#          if (iDeet==0) :norm_factors_file.write(" %.3f"%effect)
+#          else: norm_factors_file.write(", %.3f"%effect)
+#          result["%s_%s"%(proc,name)][n] = effect
+#      elif isinstance(deet,str):
+#        if deet.count('THU'):
+#          runningTotal_nom=0
+#          runningTotal_up=0
+#          runningTotal_down=0
+#          weight = r.RooRealVar("weight","weight",0)
+#          weight_up = inWS.var("%sUp01sigma"%(name))
+#          weight_down = inWS.var("%sDown01sigma"%(name))
+#          weight_central = inWS.var("centralObjectWeight") 
+#          weight_sumW = inWS.var("sumW")
+#          for cat in inclusiveCats:
+#            data_nominal = inWS.data("%s_%d_13TeV_%s"%(flashggProcs[proc],options.mass,cat))
+#            print 'on proc %s, cat %s, looking for dataset %s'%(proc, cat, "%s_%d_13TeV_%s"%(flashggProcs[proc],options.mass,cat))
+#            data_nominal_sum = data_nominal.sumEntries()
+#            data_up = data_nominal.emptyClone();
+#            data_down = data_nominal.emptyClone();
+#            data_nominal_new = data_nominal.emptyClone();
+#            zeroWeightEvents=0.
+#            for i in range(0,int(data_nominal.numEntries())):
+#               mass.setVal(data_nominal.get(i).getRealValue("CMS_hgg_mass"))
+#               w_nominal =data_nominal.weight()
+#               w_up = data_nominal.get(i).getRealValue("%sUp01sigma"%(name))
+#               w_down = data_nominal.get(i).getRealValue("%sDown01sigma"%(name))
+#               w_central = data_nominal.get(i).getRealValue("centralObjectWeight")
+#               sumW = data_nominal.get(i).getRealValue("sumW")
+#               if (abs(w_central)<1E-4 or abs(w_nominal)<1E-4 or w_nominal<=0. or math.isnan(w_central) or math.isnan(w_up) or math.isnan(w_down) or w_central<=0. or w_up<=0. or w_up>10.0 or w_down<=0. or w_down>10.0): 
+#                 w_up = 1.
+#                 w_down = 1.
+#                 w_central = 1.
+#               if abs(w_up/w_central - 1.) > 0.5: 
+#                 w_up = 1.
+#                 w_central = 1.
+#               if abs(w_down/w_central - 1.) > 0.5: 
+#                 w_down = 1.
+#                 w_central = 1.
+#               weight_up.setVal(w_nominal*(w_up/w_central))
+#               weight_down.setVal(w_nominal*(w_down/w_central))
+#               data_up.add(r.RooArgSet(mass,weight_up),weight_up.getVal())
+#               data_down.add(r.RooArgSet(mass,weight_down),weight_down.getVal())
+#               data_nominal_new.add(r.RooArgSet(mass,weight),w_nominal)
+#            runningTotal_nom_old = runningTotal_nom
+#            runningTotal_up_old = runningTotal_up
+#            runningTotal_down_old = runningTotal_down
+#            runningTotal_nom =runningTotal_nom + data_nominal.sumEntries() 
+#            runningTotal_up =runningTotal_up + data_up.sumEntries()
+#            runningTotal_down =runningTotal_down + data_down.sumEntries()
+#          effectUp=-1
+#          effectDown=-1
+#          if (runningTotal_nom==runningTotal_up): effectUp=1
+#          else: effectUp = runningTotal_up/runningTotal_nom
+#          if (runningTotal_nom==runningTotal_down): effectDown=1
+#          else: effectDown = runningTotal_down/runningTotal_nom
+#          norm_factors_file.write("%.3f"%effectUp)
+#          norm_factors_file.write(", %.3f"%effectDown)
+#          result["%s_%s"%(proc,name)]['Up'] = effectUp
+#          result["%s_%s"%(proc,name)]['Down'] = effectDown
+#    norm_factors_file.write("]\n")
+#    #print result
+##exit(1)
+#norm_factors_file.close()
+#theoryNormFactors=result
   
 
 #yprinting function
@@ -996,7 +997,7 @@ vtxSyst = 0.02 #updated for Moriond17
 flashggSysts['FracRVWeight'] = 'FracRVWeight'
 flashggSysts['FracRVNvtxWeight'] = 'FracRVNvtxWeight'
 # As before...
-flashggSysts['MvaLinearSyst'] = 'MvaLinearSyst'
+#flashggSysts['MvaLinearSyst'] = 'MvaLinearSyst'
 flashggSysts['LooseMvaSF'] =  'LooseMvaSF'
 flashggSysts['PreselSF']    =  'PreselSF'
 flashggSysts['electronVetoSF'] = 'electronVetoSF'
@@ -1053,19 +1054,19 @@ puJetIdEff = []
 
 # naming is important to correlate with combination
 vbfSysts={}
-if not oneLineJEC:
-  vbfSysts['JEC'] = [] 
-  vbfSysts['JER'] = [] 
-  for dijetCat in dijetCats: #each entry will represent a different migration
-     vbfSysts['JER'].append([1.,1.,1.])  #value of 1 given gor both ggh and qqh, since vairations are taken from histograms directly
-     vbfSysts['JEC'].append([1.,1.,1.]) #value of 1 given gor both ggh and qqh, since vairations are taken from histograms directly
-#vbfSysts['UnmatchedPUWeight'] = [] #removed for Moriond17
-#vbfSysts['UEPS'] =[] #superseded by new method, no longer a bin migration
-#vbfSysts['RMSShift'] =[]
-vbfSysts['PUJIDShift'] =[]
-#vbfSysts['UnmatchedPUWeight'].append([1.,1.]) #should only apply to ggh<->vbf
-#vbfSysts['RMSShift'].append([1.,1.]) #should only apply to ggh<->vbf
-vbfSysts['PUJIDShift'].append([1.,1.]) #should only apply to ggh<->vbf
+#if not oneLineJEC:
+#  vbfSysts['JEC'] = [] 
+#  vbfSysts['JER'] = [] 
+#  for dijetCat in dijetCats: #each entry will represent a different migration
+#     vbfSysts['JER'].append([1.,1.,1.])  #value of 1 given gor both ggh and qqh, since vairations are taken from histograms directly
+#     vbfSysts['JEC'].append([1.,1.,1.]) #value of 1 given gor both ggh and qqh, since vairations are taken from histograms directly
+##vbfSysts['UnmatchedPUWeight'] = [] #removed for Moriond17
+##vbfSysts['UEPS'] =[] #superseded by new method, no longer a bin migration
+##vbfSysts['RMSShift'] =[]
+#vbfSysts['PUJIDShift'] =[]
+##vbfSysts['UnmatchedPUWeight'].append([1.,1.]) #should only apply to ggh<->vbf
+##vbfSysts['RMSShift'].append([1.,1.]) #should only apply to ggh<->vbf
+#vbfSysts['PUJIDShift'].append([1.,1.]) #should only apply to ggh<->vbf
 #UEPS method no longer needs these
 #vbfSysts['UEPS'].append([0.077,0.071]) # adhoc for ggh<->vbf # UPDATED FOR ICHEP16
 #vbfSysts['UEPS'].append([0.042,0.092]) # adhoc for vbf0<->vbf1# UPDATED FOR ICHEP16
@@ -1745,13 +1746,13 @@ if ((options.justThisSyst== "batch_split") or options.justThisSyst==""):
   printSimpleTTHSysts()
 
 if (len(tthCats) > 0 ):  printTTHSysts()
-printTheorySysts()
+#printTheorySysts()
 # lnN systematics
 printFlashggSysts()
 #printUEPSSyst()
 #catgeory migrations
 #if (len(dijetCats) > 0 and len(tthCats)>0):  printVbfSysts()
-if (len(dijetCats) > 0 ):  printVbfSysts()
+#if (len(dijetCats) > 0 ):  printVbfSysts()
 #other 
 #printLepSysts() #obsolete
 

@@ -85,8 +85,15 @@ std::string WSTFileWrapper::fileToKey( std::string fileName ) {
     procName.Remove( 0, procName.Index("pythia8_")+8 ); // all file names must end pythia8_procName.root
     procName.Resize( procName.Index(".root") ); // all file names must end pythia8_procName.root
     TString massVal = TString(fileName);
-    massVal = massVal.Replace(0, massVal.Index("_13TeV_")-3, ""); //and have mass in the form M1??_13TeV_
+    std::cout << "ED DEBUG massVal is " << massVal << std::endl;
+    if( massVal.Contains("TuneCP5") ) { 
+      massVal = massVal.Replace( massVal.Index("TuneCP5_"), 8, "" );
+    }
+    std::cout << "ED DEBUG massVal is " << massVal << std::endl;
+    massVal = massVal.Replace(0, massVal.Index("_13TeV")-3, ""); //and have mass in the form M1??_13TeV_
+    std::cout << "ED DEBUG massVal is " << massVal << std::endl;
     massVal.Resize(3);
+    std::cout << "ED DEBUG massVal is " << massVal << std::endl;
     std::string keyName = TString( TString(massVal.Data()) + TString(procName.Data()) ).Data();
     return keyName;
 }
@@ -154,6 +161,12 @@ RooAbsData* WSTFileWrapper::data(std::string dataName) {
 RooAbsData* WSTFileWrapper::data(std::string keyName, std::string dataName) {
   std::pair<std::string,std::string> thePair = convertTemplatedName(dataName);
   std::string newDataName = thePair.first;
+  //std::cout << "ED DEBUG trying key " << keyName << std::endl;
+  //std::cout << "ED DEBUG list of keys" << std::endl;
+  //for( auto iDebug = fileList.begin(); iDebug != fileList.end(); iDebug++ ) {
+  //  std::cout <<  "ED DEBUG a key is " << iDebug->first << std::endl;
+  //}
+  //std::cout << "ED DEBUG finished list of keys" << std::endl << std::endl;
   fileList[keyName]->cd();
   RooAbsData* result = (RooAbsData*)((RooWorkspace*)fileList[keyName]->Get(wsName.c_str()))->data(newDataName.c_str());
   if (!result) {
@@ -269,6 +282,7 @@ RooAbsReal* WSTFileWrapper::function(std::string keyName, std::string functionNa
 
 void WSTFileWrapper::Close() {
   for (auto it = fileList.begin(); it != fileList.end() ; it++) {
+    std::cout << "ED DEBUG file name " << it->first << std::endl;
     it->second->Close();
   }
 }

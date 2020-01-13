@@ -29,5 +29,6 @@ signalScriptCfg = {
   'queue':'hep.q',
 
   # Mode allows script to carry out single function
-  'mode':'std', # Options: [std,phoSystOnly,sigFitOnly,packageOnly,sigPlotsOnly]
+  #'mode':'std', # Options: [std,phoSystOnly,sigFitOnly,packageOnly,sigPlotsOnly]
+  'mode':'sigFitOnly', # Options: [std,phoSystOnly,sigFitOnly,packageOnly,sigPlotsOnly]
 }

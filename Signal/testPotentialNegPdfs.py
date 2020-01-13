@@ -6,13 +6,20 @@ import shlex
 from array import array
 import ROOT as r
 
-ext='preappFinal2016'
+#year = '2016'
+year = '2017'
+#year = '2018'
+
+#ext='preappFinal2016'
+ext='stage1_1_%s'%year
 
 r.gSystem.Load("libHiggsAnalysisCombinedLimit")
 r.gSystem.Load("libHiggsAnalysisGBRLikelihood")
 
 #setup files 
-baseFilePath  = '/vols/cms/es811/FinalFits/ws_%s/'%ext
+#baseFilePath  = '/vols/cms/es811/FinalFits/ws_%s/'%ext
+#baseFilePath  = '/vols/cms/jl2117/hgg/ws/Jan20/stage1_1_%s'%year
+baseFilePath  = '/vols/cms/es811/HggGeneral/WorkspaceTest/Pass1/%s/ws/'%year
 fileNames     = []
 for root,dirs,files in os.walk(baseFilePath):
   for fileName in files: 
@@ -35,10 +42,7 @@ for fileName in fileNames:
   procs += fileName.split('pythia8_')[1].split('.root')[0]
   procs += ','
 procs = procs[:-1]
-cats  = 'RECO_0J_Tag0,RECO_0J_Tag1,RECO_0J_Tag2,'
-cats += 'RECO_1J_PTH_0_60_Tag0,RECO_1J_PTH_0_60_Tag1,RECO_1J_PTH_60_120_Tag0,RECO_1J_PTH_60_120_Tag1,RECO_1J_PTH_120_200_Tag0,RECO_1J_PTH_120_200_Tag1,RECO_1J_PTH_GT200,'
-cats += 'RECO_GE2J_PTH_0_60_Tag0,RECO_GE2J_PTH_0_60_Tag1,RECO_GE2J_PTH_60_120_Tag0,RECO_GE2J_PTH_60_120_Tag1,RECO_GE2J_PTH_120_200_Tag0,RECO_GE2J_PTH_120_200_Tag1,RECO_GE2J_PTH_GT200_Tag0,RECO_GE2J_PTH_GT200_Tag1,'
-cats += 'RECO_VBFTOPO_JET3VETO_Tag0,RECO_VBFTOPO_JET3VETO_Tag1,RECO_VBFTOPO_JET3_Tag0,RECO_VBFTOPO_JET3_Tag1,RECO_VBFTOPO_REST,RECO_VBFTOPO_BSM'
+cats='RECO_0J_PTH_0_10_Tag0,RECO_VBFTOPO_JET3VETO_LOWMJJ,RECO_0J_PTH_0_10_Tag1,RECO_GE2J_PTH_0_60_Tag1,RECO_1J_PTH_0_60_Tag0,RECO_0J_PTH_GT10_Tag0,RECO_VBFTOPO_JET3VETO_HIGHMJJ,RECO_GE2J_PTH_60_120_Tag1,RECO_VBFTOPO_BSM,RECO_GE2J_PTH_120_200_Tag1,RECO_1J_PTH_0_60_Tag1,RECO_GE2J_PTH_60_120_Tag0,RECO_1J_PTH_60_120_Tag1,RECO_GE2J_PTH_0_60_Tag0,RECO_VBFTOPO_JET3_HIGHMJJ,RECO_1J_PTH_60_120_Tag0,RECO_GE2J_PTH_120_200_Tag0,RECO_1J_PTH_120_200_Tag1,RECO_1J_PTH_120_200_Tag0,RECO_PTH_GT200_Tag0,RECO_PTH_GT200_Tag1,RECO_VBFTOPO_VHHAD,RECO_VBFLIKEGGH,RECO_0J_PTH_GT10_Tag1,RECO_VBFTOPO_JET3_LOWMJJ'
 procs = procs.split(',')
 cats  = cats.split(',')
 print 'with processes: %s'%procs
@@ -61,9 +65,9 @@ for proc in procs:
      nGaussian=-1
      coeffs=[]
      #dynamiccaly get nGaussians
-     print 'ED DEBUG about to get pdf with name hggpdfsmrel_13TeV_2016_%s_%s_%s_13TeV_2016'%(proc,cat,v)
-     pdf= w.pdf("hggpdfsmrel_13TeV_2016_%s_%s_%s_13TeV_2016"%(proc,cat,v));
-     print 'ED DEBUG printing pdf with name hggpdfsmrel_13TeV_2016_%s_%s_%s_13TeV_2016'%(proc,cat,v)
+     print 'ED DEBUG about to get pdf with name hggpdfsmrel_13TeV_%s_%s_%s_%s_13TeV_%s'%(year,proc,cat,v,year)
+     pdf= w.pdf("hggpdfsmrel_13TeV_%s_%s_%s_%s_13TeV_%s"%(year,proc,cat,v,year));
+     print 'ED DEBUG printing pdf with name hggpdfsmrel_13TeV_%s_%s_%s_%s_13TeV_%s'%(year,proc,cat,v,year)
      #pdf= r.RooDoubleCBFast(w.pdf("dcb_%s_%s_%s_13TeV"%(proc,cat,v)),"test");
      pdf.Print()
      #exit (1)

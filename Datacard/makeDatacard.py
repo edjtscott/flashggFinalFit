@@ -33,7 +33,9 @@ class WSTFileWrapper:
     self.wsList = {}
     for fn in self.fnList:
       if str(options.mass) not in fn: continue
-      proc = fn.split('_pythia8_')[1].split('.root')[0]
+      print 'process file %s'%fn
+      #proc = fn.split('_pythia8_')[1].split('.root')[0]
+      proc = fn.split('pythia8_')[1].split('.root')[0]
       f = r.TFile.Open(fn)
       self.fileList[proc] = f
       self.wsList[proc]   = f.Get(wsName)
@@ -42,7 +44,9 @@ class WSTFileWrapper:
   def convertTemplatedName(self, dataName):
     theProcName = ""
     theDataName = ""
-    tpMap = {"GG2H":"ggh","VBF":"vbf","TTH":"tth","QQ2HLNU":"wh","QQ2HLL":"zh","WH2HQQ":"wh","ZH2HQQ":"zh","testBBH":"bbh","testTHQ":"th","testTHW":"th","GGZH":"ggzh"}
+    #tpMap = {"GG2H":"ggh","VBF":"vbf","TTH":"tth","QQ2HLNU":"wh","QQ2HLL":"zh","WH2HQQ":"wh","ZH2HQQ":"zh","testBBH":"bbh","testTHQ":"th","testTHW":"th","GGZH":"ggzh"}
+    #tpMap = {"GG2H":"ggh","VBF":"vbf","TTH":"tth","QQ2HLNU":"wh","QQ2HLL":"zh","WH2HQQ":"wh","ZH2HQQ":"zh","BBH":"bbh","THQ":"thq","THW":"thq","GGZH":"ggzh"}
+    tpMap = {"GG2H":"ggh","VBF":"vbf","TTH":"tth","QQ2HLNU":"wh","QQ2HLL":"zh","WH2HQQ":"wh","ZH2HQQ":"zh","BBH":"bbh","THQ":"thq","THW":"thw","GGZH":"ggzh"}
     for stxsProc in tpMap:
       if dataName.startswith(stxsProc):
         theProcName = dataName.split('_%d_13TeV_'%options.mass)[0]
@@ -115,7 +119,8 @@ outFile = open(options.outfilename,'w')
 # convert flashgg style to combine style process
 tempProcs = options.procs.split(',')
 combProcs = odict()
-baseCombProcs = {'GG2H':'ggH_hgg','VBF':'qqH_hgg','TTH':'ttH_hgg','QQ2HLNU':'WH_lep_hgg','QQ2HLL':'ZH_lep_hgg','WH2HQQ':'WH_had_hgg','ZH2HQQ':'ZH_had_hgg','testBBH':'bbH_hgg','testTHQ':'tHq_hgg','testTHW':'tHW_hgg','GGZH':'ggZH_hgg','bkg_mass':'bkg_mass'}
+#baseCombProcs = {'GG2H':'ggH_hgg','VBF':'qqH_hgg','TTH':'ttH_hgg','QQ2HLNU':'WH_lep_hgg','QQ2HLL':'ZH_lep_hgg','WH2HQQ':'WH_had_hgg','ZH2HQQ':'ZH_had_hgg','testBBH':'bbH_hgg','testTHQ':'tHq_hgg','testTHW':'tHW_hgg','GGZH':'ggZH_hgg','bkg_mass':'bkg_mass'}
+baseCombProcs = {'GG2H':'ggH_hgg','VBF':'qqH_hgg','TTH':'ttH_hgg','QQ2HLNU':'WH_lep_hgg','QQ2HLL':'ZH_lep_hgg','WH2HQQ':'WH_had_hgg','ZH2HQQ':'ZH_had_hgg','BBH':'bbH_hgg','THQ':'tHq_hgg','THW':'tHW_hgg','GGZH':'ggZH_hgg','bkg_mass':'bkg_mass'}
 for proc in tempProcs:
   combProc = ''
   for baseProc in baseCombProcs.keys():
@@ -234,7 +239,8 @@ print toVeto
 ## SHAPE SYSTEMATIC SETUP  ####################################################
 ###############################################################################
 file_ext = 'mva'
-out_ext = 'stage1_1_2016' #ED FIXME
+#out_ext = 'stage1_1_2016' #ED FIXME
+out_ext = 'stage1_1_%s'%year #ED FIXME
 dataFile = 'Inputs/%s/CMS-HGG_%s_%dTeV_multipdf.root'%(out_ext,file_ext,sqrts)
 bkgFile = 'Inputs/%s/CMS-HGG_%s_%dTeV_multipdf.root'%(out_ext,file_ext,sqrts)
 dataWS = 'multipdf'

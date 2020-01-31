@@ -3,7 +3,7 @@
 import os, sys
 from optparse import OptionParser
 
-lumi = {'2016':'35.9', '2017':'41.5', '2018':'59.8'}
+lumi = {'2016':'35.9', '2017':'41.5', '2018':'59.8', 'merged':'137'}
 
 def get_options():
   parser = OptionParser()
@@ -98,6 +98,7 @@ for fileName in ws_fileNames:
   if 'M125' not in fileName: continue
   procs += "%s,"%fileName.split('pythia8_')[1].split('.root')[0]
 procs = procs[:-1]
+if len(procs)==0: procs = 'arbitrary'
 
 # Extract data file name and signal fit workspace filename
 dataFile = "%s/allData.root"%inputWSDir

@@ -599,7 +599,8 @@ int main(int argc, char* argv[]){
   lumi_8TeV  = "19.1 fb^{-1}"; // default is "19.7 fb^{-1}"
   lumi_7TeV  = "4.9 fb^{-1}";  // default is "5.1 fb^{-1}"
   lumi_sqrtS = "13 TeV";       // used with iPeriod = 0, e.g. for simulation-only plots (default is an empty string)
-  int year_ = 2016;
+  //int year_ = 2016;
+  string year_ = "2016";
   //int year_ = 2017;
 
   string fileName;
@@ -632,7 +633,8 @@ vector<string> flashggCats_;
     ("isFlashgg",  po::value<int>(&isFlashgg_)->default_value(1),  								    	        "Use Flashgg output ")
     ("isData",  po::value<bool>(&isData_)->default_value(0),  								    	        "Use Data not MC ")
 		("flashggCats,f", po::value<string>(&flashggCatsStr_)->default_value("UntaggedTag_0,UntaggedTag_1,UntaggedTag_2,UntaggedTag_3,UntaggedTag_4,VBFTag_0,VBFTag_1,VBFTag_2,TTHHadronicTag,TTHLeptonicTag,VHHadronicTag,VHTightTag,VHLooseTag,VHEtTag"),       "Flashgg category names to consider")
-    ("year", po::value<int>(&year_)->default_value(2016),       "Dataset year")
+    //("year", po::value<int>(&year_)->default_value(2016),       "Dataset year")
+    ("year", po::value<string>(&year_)->default_value("2016"),       "Dataset year")
     ("verbose,v",                                                                               "Run with more output")
   ;
   po::variables_map vm;
@@ -678,7 +680,8 @@ vector<string> flashggCats_;
   RooWorkspace *inWS;
 	if(isFlashgg_){
 		if (isData_){
-			inWS = (RooWorkspace*)inFile->Get("tagsDumper/cms_hgg_13TeV");
+      if(year_=="merged") {inWS = (RooWorkspace*)inFile->Get("cms_hgg_13TeV");}
+			else {inWS = (RooWorkspace*)inFile->Get("tagsDumper/cms_hgg_13TeV");}
 		} else {
 			inWS = (RooWorkspace*)inFile->Get("cms_hgg_workspace");
 		}
@@ -742,7 +745,8 @@ vector<string> flashggCats_;
 	std::string ext = is2011 ? "7TeV" : "8TeV";
 	//if (isFlashgg_) ext = "13TeV";
   //FIXME trying to remove duplicated names for 2016+2017 combination
-	if (isFlashgg_) ext = Form("13TeV_%d",year_);
+	//if (isFlashgg_) ext = Form("13TeV_%d",year_);
+	if (isFlashgg_) ext = Form("13TeV_%s",year_.c_str());
 	for (int cat=startingCategory; cat<ncats; cat++){
 
 		map<string,int> choices;
@@ -758,6 +762,7 @@ vector<string> flashggCats_;
 		RooDataSet *dataFull;
 		RooDataSet *dataFull0;
 		if (isData_) {
+    std::cout << "ED DEBUG trying to get dataFull, with the name " << Form("Data_13TeV_%s",catname.c_str()) << std::endl;
     dataFull = (RooDataSet*)inWS->data(Form("Data_13TeV_%s",catname.c_str()));
     /*dataFull= (RooDataSet*) dataFull0->emptyClone();
     for (int i =0 ; i < dataFull0->numEntries() ; i++){
@@ -795,6 +800,8 @@ vector<string> flashggCats_;
 			thisdataBinned_name= Form("roohist_data_mass_cat%d",cat);
 			//RooDataSet *data = (RooDataSet*)dataFull;
 		}
+    inWS->Print();
+    dataFull->Print();
 		RooDataHist thisdataBinned(thisdataBinned_name.c_str(),"data",*mass,*dataFull);
 		data = (RooDataSet*)&thisdataBinned;
 

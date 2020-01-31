@@ -153,7 +153,7 @@ print " --> Job information:"
 print "     * Batch: %s"%batch
 print "     * Queue: %s"%queue
 print ""
-if mode == "phoSystCalc": print " --> Calculating photon systematics only..."
+if mode == "phoSystOnly": print " --> Calculating photon systematics only..."
 elif mode == "sigFitOnly": print " --> Running signal fit only..."
 elif mode == "packageOnly": print " --> Packaging only..."
 elif mode == "sigPlotsOnly": print " --> Running the signal plotting scripts only..."
@@ -166,7 +166,7 @@ cmdLine = ''
 cmdLine += './runSignalScripts.sh -i %s -p %s -f %s --ext %s --intLumi %s --year %s --batch %s --queue %s --massList %s --bs %s --analysis %s --scales %s --scalesCorr %s --scalesGlobal %s --smears %s --useSSF 1'%(ws_fullFileNames,procs,cats,ext,lumi[year],year,batch,queue,massPoints,beamspot,analysis,scales,scalesCorr,scalesGlobal,smears)
 if useDCB: cmdLine += ' --useDCB_1G 1'
 else: cmdLine += ' --useDCB_1G 0'
-if mode == "phoSystCalc": cmdLine += ' --calcPhoSystOnly' 
+if mode == "phoSystOnly": cmdLine += ' --calcPhoSystOnly' 
 elif mode == "sigFitOnly": cmdLine += ' --sigFitOnly --dontPackage' 
 elif mode == "packageOnly": cmdLine += ' --packageOnly'
 elif mode == "sigPlotsOnly": cmdLine += ' --sigPlotsOnly'

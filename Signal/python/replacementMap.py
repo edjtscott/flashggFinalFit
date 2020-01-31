@@ -7,12 +7,14 @@
 # Replacement proc for WV fit: 
 replacementProcWV = {
   "hig-16-040":"GG2H",
+  "ttH":"TTH",
   "stage1":"GG2H_0J",
   "stage1_1":"GG2H_0J_PTH_GT10"
 }
 # Replacement cat for WV fit: 
 replacementCatWV = {
   "hig-16-040":"UntaggedTag_2",
+  "ttH":"TTHHadronicTag_3",
   "stage1":"RECO_0J_Tag1",
   "stage1_1":"RECO_0J_PTH_GT10_Tag1"
 }
@@ -41,6 +43,18 @@ replacementProcRVMap = {
     "VHLeptonicLooseTag:QQ2HLNU",
     "VHHadronicTag:ZH2HQQ",
     "VHMetTag:QQ2HLNU"
+  ],
+
+  "ttH":[
+    "TTHHadronicTag_0:TTH",
+    "TTHHadronicTag_1:TTH",
+    "TTHHadronicTag_2:TTH",
+    "TTHHadronicTag_3:TTH",
+    "TTHLeptonicTag_0:TTH",
+    "TTHLeptonicTag_1:TTH",
+    "TTHLeptonicTag_2:TTH",
+    "TTHLeptonicTag_3:TTH",
+    "THQLeptonicTag:THQ"
   ],
 
   # STXS stage 1 categorisation (HIG-18-029)
@@ -130,6 +144,18 @@ replacementCatRVMap = {
     "VHLeptonicLooseTag:VHLeptonicLooseTag",
     "VHHadronicTag:VHHadronicTag",
     "VHMetTag:VHMetTag"
+  ],
+
+  "ttH":[
+    "TTHHadronicTag_0:TTHHadronicTag_0",
+    "TTHHadronicTag_1:TTHHadronicTag_1",
+    "TTHHadronicTag_2:TTHHadronicTag_2",
+    "TTHHadronicTag_3:TTHHadronicTag_3",
+    "TTHLeptonicTag_0:TTHLeptonicTag_0",
+    "TTHLeptonicTag_1:TTHLeptonicTag_1",
+    "TTHLeptonicTag_2:TTHLeptonicTag_2",
+    "TTHLeptonicTag_3:TTHLeptonicTag_3",
+    "THQLeptonicTag:THQLeptonicTag"
   ],
 
   # STXS stage 1 categorisation (HIG-18-029)

@@ -66,7 +66,8 @@ void OptionParser(int argc, char *argv[]){
 		("recursive",																																							"Recursive fraction")
 		("forceFracUnity",																																				"Force fraction unity")
 		("isFlashgg",	po::value<bool>(&isFlashgg_)->default_value(true),													"Use flashgg format")
-		("verbose",	po::value<bool>(&verbose_)->default_value(false),													"Use flashgg format")
+		//("verbose",	po::value<bool>(&verbose_)->default_value(false),													"Use flashgg format")
+		("verbose",	po::value<bool>(&verbose_)->default_value(true),													"Use flashgg format")
 		("flashggCats,f", po::value<string>(&flashggCatsStr_)->default_value("UntaggedTag_0,UntaggedTag_1,UntaggedTag_2,UntaggedTag_3,UntaggedTag_4,VBFTag_0,VBFTag_1,VBFTag_2,TTHHadronicTag,TTHLeptonicTag,VHHadronicTag,VHTightTag,VHLooseTag,VHEtTag"),       "Flashgg category names to consider")
 		("considerOnly", po::value<string>(&considerOnlyStr_)->default_value("All"), 
     "If you wish to only consider a subset cat in the list, list them as separated by commas. ")

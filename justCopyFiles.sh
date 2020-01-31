@@ -1,6 +1,10 @@
-EXT="stage1_1_2016"
+#EXT="stage1_1_2016"
 #EXT="stage1_1_2017"
 #EXT="stage1_1_2018"
+#EXT="ttHworkspaces_2016"
+#EXT="ttHworkspaces_2017"
+#EXT="ttHworkspaces_2018"
+EXT="ttHworkspaces_merged"
 OUTDIR="outdir_${EXT}"
 
 if [ ! -d "Signal/$OUTDIR" ]; then

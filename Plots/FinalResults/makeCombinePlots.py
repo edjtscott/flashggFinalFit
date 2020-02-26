@@ -1410,6 +1410,43 @@ def plotMPdfChComp(plottype="perTag"):
     ['',  1.546,  0.662,  0.567,  9., 9.], # ggH 1J low
     ['',  1.174,  0.201,  0.200,  9., 9.]  # ggH 0J
     ]
+  elif 'Stage1p1' in options.outname:
+    points = [ #stage 1.1
+    ['',  1.0,  7.535,  1.000,  9., 9.], # tH
+    ['',  1.0,  0.393,  0.479,  9., 9.], # ttH
+    ['',  1.0,  1.561,  1.000,  9., 9.], # ZH lep
+    ['',  1.0,  0.466,  0.402,  9., 9.], # WH lep
+    ['',  1.0,  1.110,  1.000,  9., 9.], # qqH BSM
+    ['',  1.0,  2.242,  1.000,  9., 9.], # qqH VH-like
+    ['',  1.0,  1.240,  1.000,  9., 9.], # qqH VBF 3J-like
+    ['',  1.0,  0.677,  0.634,  9., 9.], # qqH VBF 2J-like
+    ['',  1.0,  0.236,  0.224,  9., 9.], # ggH BSM
+    ['',  1.0,  1.100,  1.000,  9., 9.], # ggH VBF-like
+    ['',  1.0,  0.416,  0.396,  9., 9.], # ggH 2J high
+    ['',  1.0,  0.616,  0.567,  9., 9.], # ggH 2J med
+    ['',  1.0,  0.844,  0.805,  9., 9.], # ggH 2J low
+    ['',  1.0,  0.575,  0.558,  9., 9.], # ggH 1J high
+    ['',  1.0,  0.355,  0.342,  9., 9.], # ggH 1J med
+    ['',  1.0,  0.430,  0.425,  9., 9.], # ggH 1J low
+    ['',  1.0,  0.177,  0.171,  9., 9.], # ggH 0J high
+    ['',  1.0,  0.334,  0.330,  9., 9.]  # ggH 0J low
+    ]
+    #points = [ #stage 1.1
+    #['',  1.0,  1.110,  1.009,  9., 9.], # qqH BSM
+    #['',  1.0,  2.244,  1.0,  9., 9.], # qqH VH-like
+    #['',  1.0,  1.232,  1.000,  9., 9.], # qqH VBF 3J-like
+    #['',  1.0,  0.677,  0.634,  9., 9.], # qqH VBF 2J-like
+    #['',  1.0,  0.232,  0.221,  9., 9.], # ggH BSM
+    #['',  1.0,  1.091,  1.000,  9., 9.], # ggH VBF-like
+    #['',  1.0,  0.405,  0.388,  9., 9.], # ggH 2J high
+    #['',  1.0,  0.623,  0.567,  9., 9.], # ggH 2J med
+    #['',  1.0,  0.835,  0.800,  9., 9.], # ggH 2J low
+    #['',  1.0,  0.576,  0.545,  9., 9.], # ggH 1J high
+    #['',  1.0,  0.356,  0.339,  9., 9.], # ggH 1J med
+    #['',  1.0,  0.430,  0.424,  9., 9.], # ggH 1J low
+    #['',  1.0,  0.177,  0.171,  9., 9.], # ggH 0J high
+    #['',  1.0,  0.333,  0.331,  9., 9.]  # ggH 0J low
+    #]
   elif 'Stage1' in options.outname:
     points = [ #stage 1
     ['',  0.817,  0.426,  0.324,  9., 9.], # qqH
@@ -1421,10 +1458,11 @@ def plotMPdfChComp(plottype="perTag"):
     ['',  1.181,  0.202,  0.199,  9., 9.]  # ggH 0J
     ]
 
+  print 'ED DEBUG catNames = %s'%catNames
   
   rMin=1000.
   rMax=-1000.
-  if addDummyPoint : 
+  if addDummyPoint :  #FIXME
     catNames.append("Dummy")
     points.append(["",0,0,0,0,0])
     if options.percatchcomp: #for spacing the now very busy per cat mu plot
@@ -1435,7 +1473,34 @@ def plotMPdfChComp(plottype="perTag"):
     elif options.outname.count('Minimal'):
       catNames.append("DummySecond")
       points.append(["",0,0,0,0,0])
+    elif options.outname.count('1p1'):
+      catNames.append("DummySecond")
+      points.append(["",0,0,0,0,0])
+      catNames.insert(0,("DummyPre"))
+      points.insert(0,(["",0,0,0,0,0]))
   if not options.noComb:  catNames=catNames[1:]
+  catNames  = [
+    'DummyPre',
+    'tH',
+    'ttH',
+    'ZH lep',
+    'WH lep',
+    'qqH BSM',
+    'qqH VH-like',
+    'qqH VBF 3J-like',
+    'qqH VBF 2J-like',
+    'ggH BSM',
+    'ggH VBF-like',
+    'ggH 2J high',
+    'ggH 2J med',
+    'ggH 2J low',
+    'ggH 1J high',
+    'ggH 1J med',
+    'ggH 1J low',
+    'ggH 0J high',
+    'ggH 0J low',
+    'Dummy',
+    'DummySecond']
 
   r.gROOT.SetBatch(options.batch)
   for point in points:
@@ -1485,6 +1550,7 @@ def plotMPdfChComp(plottype="perTag"):
 
   nofitlines = []
 
+  print 'ED DEBUG catFits = %s'%catFits
   for p, point in enumerate(catFits):
     grIndex = p//ppergraph
     pIndex  = p%ppergraph
@@ -1680,6 +1746,8 @@ def plotMPdfChComp(plottype="perTag"):
     #doHatching = True
   if 'Stage1Minimal' in options.outname:
     doHatching = True
+  if 'Stage1p1' in options.outname:
+    doHatching = True
   if doHatching:
     hatchBox = r.TBox(-0.2,0.,0.,len(catFits))
     hatchBox.SetFillStyle(3004)
@@ -1740,6 +1808,9 @@ def plotMPdfChComp(plottype="perTag"):
                        ("VBF_Rest"      ,[0.067, 0.067])
                        ])
       boxIndexMap = { name:i for i,name in enumerate(reversed(procUncertMap.keys())) }
+    elif 'Stage1p1' in options.outname:
+      procUncertMap = od()
+      boxIndexMap = {}
     elif 'Stage1' in options.outname:
       procUncertMap = od([
                        ("GG2H_0J"        ,[0.051, 0.051]), #sum in quadrature of uncerts removed, plus then minus

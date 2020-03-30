@@ -98,29 +98,29 @@ E.g. for a Profiled MH (floating Higgs Mass) version:
 
 If you don't yet have a datacard, first make one with the profiled MH physics model: 
 ```
-text2workspace.py CMS-HGG_mva_13TeV_datacard.txt -o CMS-HGG_mva_13TeV_datacardMuScanMHProf.root -P HiggsAnalysis.CombinedLimit.PhysicsModel:floatingHiggsMass  -m 125.09 
+text2workspace.py CMS-HGG_mva_13TeV_datacard.txt -o CMS-HGG_mva_13TeV_datacardMuScanMHProf.root -P HiggsAnalysis.CombinedLimit.PhysicsModel:floatingHiggsMass  -m 125 
 ```
 Then run combine and save the workspace: 
 ```
-combine -m 125.09 -M MultiDimFit --saveWorkspace -n CMS-HGG_mva_13TeV_datacardMuScanMHProf CMS-HGG_mva_13TeV_datacardMuScanMHProf.root 
+combine -m 125 -M MultiDimFit --saveWorkspace -n CMS-HGG_mva_13TeV_datacardMuScanMHProf CMS-HGG_mva_13TeV_datacardMuScanMHProf.root 
 ```
 Set up the directory and copy the file you made: 
 ```
 mkdir s_sb_weighted
 cd s_sb_weighted
-mv ../higgsCombineCMS-HGG_mva_13TeV_datacardMuScanMHProf.MultiDimFit.mH125.09.root inputfile.root
+mv ../higgsCombineCMS-HGG_mva_13TeV_datacardMuScanMHProf.MultiDimFit.mH125.root inputfile.root
 ```
 Now create the toys which are used to construct the 1/2sigma uncertainty bands for the background. This can be done one toy at a time locally (slow):
 ```
-../scripts/s_sb_errorbands.sh 1 $PWD 125.97 0.95 200
+../scripts/s_sb_errorbands.sh 1 $PWD 125.55 1.05
 ```
 Or better, on the batch. Here is an example which uses the IC sge batch system:
 ```
-p=0 ; while (( $p<200 )); do qsub -q hep.q -l h_rt=10:0:0 -l h_vmem=12G $PWD/../scripts/s_sb_errorbands.sh $p $PWD 125.97 0.95; (( p=$p+1 )) ; done
+p=0 ; while (( $p<200 )); do qsub -q hep.q -l h_rt=10:0:0 -l h_vmem=12G $PWD/../scripts/s_sb_errorbands.sh $p $PWD 125.55 1.05; (( p=$p+1 )) ; done
 ```
 Once your jobs are done you should have 200 toys in your s_sb_weighted directory, and you can make the plots:
 ```
-../../../Background/bin/plotweightedbands -i inputfile.root --name example --lumi 12.9
+../../../Background/bin/plotweightedbands -i inputfile.root --name example --lumi 77.4
 ```
 
 ## Nuisance impacts

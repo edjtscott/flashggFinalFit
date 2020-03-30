@@ -51,6 +51,9 @@ namespace po = boost::program_options;
 string filenameStr_;
 vector<string> filename_;
 string name_;
+string catSelect_;
+string catSelectVeto_;
+string catPretty_;
 float intLumi_;
 bool verbose_;
 bool drawZeroBins_ ;
@@ -62,6 +65,9 @@ void OptionParser(int argc, char *argv[]){
 		("help,h",                                                                                			"Show help")
 		("infilename,i", po::value<string>(&filenameStr_),                                           			"Input file name")
 		("name", po::value<string>(&name_)->default_value("CMS-HGG_hgg_"), 			"Output file name")
+		("catSelect", po::value<string>(&catSelect_)->default_value(""), 			"String to require for inclusion in sums")
+		("catSelectVeto", po::value<string>(&catSelectVeto_)->default_value("zzzzzzzzz"), 			"String to not require for inclusion in sums")
+		("catPretty", po::value<string>(&catPretty_)->default_value(""), 			"Name of categories being selected for plot labels")
 		("lumi", po::value<float>(&intLumi_)->default_value(12.9), 			"Output file name")
 		("verbose,v", po::value<bool>(&verbose_)->default_value(0),       "verbose")
 		("quoteMu", po::value<bool>(&quoteMu_)->default_value(1),       "set 0 to not quote mu eg for fiducial XS result")
@@ -292,7 +298,15 @@ int main(int argc, char *argv[]) {
     catnames.push_back(std::string(chan->getLabel()));
     TString desc = Form("#splitline{%s}{}",chan->getLabel());
     //make human readbale labels
-    desc.ReplaceAll("_"," ");
+    desc.ReplaceAll("RECO_","");
+    if( desc.Contains("ch1_") ) {
+      desc.ReplaceAll("ch1_"," ");
+      //desc = desc + TString(" 2016"); //FIXME
+    }
+    else if( desc.Contains("ch2_") ) {
+      desc.ReplaceAll("ch2_"," ");
+      //desc = desc + TString(" 2017"); //FIXME
+    }
     desc.ReplaceAll("13TeV","");
     desc.ReplaceAll("UntaggedTag","Untagged");
     desc.ReplaceAll("VBFTag","VBF");
@@ -304,6 +318,18 @@ int main(int argc, char *argv[]) {
     desc.ReplaceAll("ZHLeptonicTag","ZH Leptonic");
     desc.ReplaceAll("VHMetTag","VH MET");
     desc.ReplaceAll("SigmaMpTTag","#sigma_{M}/M |_{decorr} category");
+    desc.ReplaceAll("PTH_0_60","low");
+    desc.ReplaceAll("PTH_60_120","med");
+    desc.ReplaceAll("PTH_120_200","high");
+    desc.ReplaceAll("PTH_GT200","BSM");
+    desc.ReplaceAll("GE2J","2J");
+    desc.ReplaceAll("PTJET1_GT200","BSM");
+    desc.ReplaceAll("VBFTOPO","VBF");
+    desc.ReplaceAll("JET3VETO","2J-like");
+    desc.ReplaceAll("JET3","3J-like");
+    desc.ReplaceAll("VH2JET","VH-like");
+    desc.ReplaceAll("REST","rest");
+    desc.ReplaceAll("_"," ");
     catdesc.push_back(desc);
     std::cout << "[INFO] --> description :" << desc << std::endl;
   }
@@ -311,12 +337,14 @@ int main(int argc, char *argv[]) {
   printf("[INFO] Channel %d  : combcat_unweighted",chan->numTypes()+1);
   std::cout << "[INFO] --> description :" << "#splitline{fiducial phase space}{All classes} "<< std::endl;
   catnames.push_back("combcat_unweighted");
-  catdesc.push_back("#splitline{All categories}{}");
+  if (catPretty_.length() > 1) { catdesc.push_back(Form("#splitline{%s categories}{}",catPretty_.c_str())); }
+  else { catdesc.push_back("#splitline{All categories}{}"); }
   
   printf("[INFO] Channel %d  : combcat_weighted",chan->numTypes()+2);
   std::cout << "[INFO] --> description :" << "#splitline{fiducial phase space}{S/(S+B) weighted}" << std::endl;
   catnames.push_back("combcat_weighted");
-  catdesc.push_back("#splitline{All categories}{S/(S+B) weighted}");
+  if (catPretty_.length() > 1) { catdesc.push_back(Form("#splitline{%s categories}{S/(S+B) weighted}",catPretty_.c_str())); }
+  else { catdesc.push_back("#splitline{All categories}{S/(S+B) weighted}"); }
   
   if (verbose_) std::cout << "[INFO] preparing weights verctor.." << std::endl; 
   std::vector<double> catweights;
@@ -451,24 +479,24 @@ int main(int argc, char *argv[]) {
     hbplotfinetmp->Scale(1/hbplotfinetmp->Integral());
 
     hsigbkg->Add(hsbtmp,sbevents);
-    hwsigbkg->Add(hsbtmp,catweight*sbevents);
+    if (TString(chan->getLabel()).Contains(catSelect_) && !TString(chan->getLabel()).Contains(catSelectVeto_)) hwsigbkg->Add(hsbtmp,catweight*sbevents);
 
     hbkg->Add(hbtmp,bevents);
-    hwbkg->Add(hbtmp,catweight*bevents);
+    if (TString(chan->getLabel()).Contains(catSelect_) && !TString(chan->getLabel()).Contains(catSelectVeto_)) hwbkg->Add(hbtmp,catweight*bevents);
     
     hbkgplot->Add(hbplottmp,bevents);
-    hwbkgplot->Add(hbplottmp,catweight*bevents);
+    if (TString(chan->getLabel()).Contains(catSelect_) && !TString(chan->getLabel()).Contains(catSelectVeto_)) hwbkgplot->Add(hbplottmp,catweight*bevents);
     
     hbkgplotfine->Add(hbplotfinetmp,bevents);
-    hwbkgplotfine->Add(hbplotfinetmp,catweight*bevents);    
+    if (TString(chan->getLabel()).Contains(catSelect_) && !TString(chan->getLabel()).Contains(catSelectVeto_)) hwbkgplotfine->Add(hbplotfinetmp,catweight*bevents);    
     hsigbkgplotfine->Add(hsbplotfinetmp,sbevents);
-    hwsigbkgplotfine->Add(hsbplotfinetmp,catweight*sbevents);    
+    if (TString(chan->getLabel()).Contains(catSelect_) && !TString(chan->getLabel()).Contains(catSelectVeto_)) hwsigbkgplotfine->Add(hsbplotfinetmp,catweight*sbevents);    
     
     TH1 *hstmp = new TH1D ( sbevents*(*hsbtmp) - bevents*(*hbtmp) );
     hsig->Add(hstmp);
     
     TH1 *hwstmp = new TH1D ( catweight*(sbevents*(*hsbtmp) - bevents*(*hbtmp)) );
-    hwsig->Add(hwstmp);
+    if (TString(chan->getLabel()).Contains(catSelect_) && !TString(chan->getLabel()).Contains(catSelectVeto_)) hwsig->Add(hwstmp);
 
     TH1D *hbkgplot_cat = new TH1D(TString::Format("hbkgplot_%s",catnames[i].Data()),"",nbins,lowedge,highedge);
     hbkgplot_cat->Add(hbplottmp,bevents);
@@ -489,13 +517,13 @@ int main(int argc, char *argv[]) {
     
     RooAbsReal *catnorm = win->var(TString::Format("shapeBkg_bkg_mass_%s__norm",chan->getLabel()));
     RooProduct *wcatnorm = new RooProduct(TString::Format("%s_wcatnorm",chan->getLabel()),"",RooArgSet(RooConst(catweight),*catnorm));
-    wcatnorms.add(*wcatnorm);
+    if (TString(chan->getLabel()).Contains(catSelect_) && !TString(chan->getLabel()).Contains(catSelectVeto_)) wcatnorms.add(*wcatnorm);
         
     sobres->setVal(catweight);
 
     catdata->addColumn(*sobres);
     RooDataSet *wcatdata = new RooDataSet("wcatdata","",catdata,RooArgSet(*chan,*mass,*sobres),0,"sobres");
-    wdata->append(*wcatdata);
+    if (TString(chan->getLabel()).Contains(catSelect_) && !TString(chan->getLabel()).Contains(catSelectVeto_)) wdata->append(*wcatdata);
         
     delete wcatdata;
   }
@@ -634,9 +662,12 @@ int main(int argc, char *argv[]) {
     
     for (int icat=0; icat<ncats; ++icat) {
       double catweight = weightscale*catweights[icat];
-      for (int itoy=0; itoy<ntoys; ++itoy) {
-        errquantcomb[itoy] += errquants[icat][ibin][itoy];
-        errquantcombw[itoy] += catweight*errquants[icat][ibin][itoy];
+      chan->setIndex(icat);       
+      if (TString(chan->getLabel()).Contains(catSelect_) && !TString(chan->getLabel()).Contains(catSelectVeto_)) {
+        for (int itoy=0; itoy<ntoys; ++itoy) {
+          errquantcomb[itoy] += errquants[icat][ibin][itoy];
+          errquantcombw[itoy] += catweight*errquants[icat][ibin][itoy];
+        }
       }
     }
  } 
@@ -644,19 +675,19 @@ int main(int argc, char *argv[]) {
   
   for (int icat=0; icat<(ncats+2); ++icat) {
     for (int ibin=0; ibin<nbins; ++ibin) {
-    //std::cout << "########################################################################" << std::endl;
-    //std::cout << "################### Toys for uncertainties debug for bin " << ibin <<  " and channel " << icat << "  ####################" << std::endl;
-   // std::cout << "########################################################################" << std::endl;
-    //std::cout << "errquants[ncats][ibin] size " << errquants[ncats][ibin].size() << " vs ntous " << ntoys << std::endl;
+    std::cout << "########################################################################" << std::endl;
+    std::cout << "################### Toys for uncertainties debug for bin " << ibin <<  " and channel " << icat << "  ####################" << std::endl;
+    std::cout << "########################################################################" << std::endl;
+    std::cout << "errquants[ncats][ibin] size " << errquants[ncats][ibin].size() << " vs ntous " << ntoys << std::endl;
       std::vector<double> &entries = errquants[icat][ibin];
       std::sort(entries.begin(),entries.end());
       for (int ientry =0 ; ientry < entries.size() ; ientry++){
-     // std::cout << "entry " << ientry << " value " << entries[ientry] << std::endl;
-     // if (ientry == int(quantmed*entries.size())) std::cout << "** ^ median ^ ** "<< std::endl;  
-     // if (ientry == int(quantminusone*entries.size())) std::cout << "** ^ -1 sig ^ ** "<< std::endl;  
-     // if (ientry == int(quantplusone*entries.size())) std::cout << "** ^ +1 sig ^ ** "<< std::endl;  
-     // if (ientry == int(quantminustwo*entries.size())) std::cout << "** ^ -2 sig ^ ** "<< std::endl;  
-     // if (ientry == int(quantplustwo*entries.size())) std::cout << "** ^ +2 sig ^ ** "<< std::endl;  
+      std::cout << "entry " << ientry << " value " << entries[ientry] << std::endl;
+      if (ientry == int(quantmed*entries.size())) std::cout << "** ^ median ^ ** "<< std::endl;  
+      if (ientry == int(quantminusone*entries.size())) std::cout << "** ^ -1 sig ^ ** "<< std::endl;  
+      if (ientry == int(quantplusone*entries.size())) std::cout << "** ^ +1 sig ^ ** "<< std::endl;  
+      if (ientry == int(quantminustwo*entries.size())) std::cout << "** ^ -2 sig ^ ** "<< std::endl;  
+      if (ientry == int(quantplustwo*entries.size())) std::cout << "** ^ +2 sig ^ ** "<< std::endl;  
       }
       double median = entries[int(quantmed*entries.size())];
       double minusone = entries[int(quantminusone*entries.size())];
@@ -865,11 +896,11 @@ int main(int argc, char *argv[]) {
     lat2->SetNDC();
     lat2->SetTextSize(0.045);
     lat2->DrawLatex(0.535,0.800,TString::Format("#scale[1.0]{%s}",catdesc.at(i).Data()));
-    if (quoteMu_){
-    lat2->DrawLatex(0.159,0.8,Form("#hat{m}_{H}=%.1f GeV, #hat{#mu}=%.2f",MH->getVal(),r->getVal()));
-    } else {
-    lat2->DrawLatex(0.159,0.8,Form("#hat{m}_{H}=%.1f GeV",MH->getVal()));
-    }
+    //if (quoteMu_){
+    //lat2->DrawLatex(0.159,0.8,Form("#hat{m}_{H}=%.1f GeV, #hat{#mu}=%.2f",MH->getVal(),r->getVal()));
+    //} else {
+    //lat2->DrawLatex(0.159,0.8,Form("#hat{m}_{H}=%.1f GeV",MH->getVal()));
+    //}
     lat2->DrawLatex(0.56585,0.727+offset,"-"); // top
     
     TLatex *lat2b = new TLatex();
@@ -881,13 +912,15 @@ int main(int argc, char *argv[]) {
     TLatex *lat3 = new TLatex();
     lat3->SetNDC();
     lat3->SetTextSize(0.057);
-    //lat3->DrawLatex(0.13,0.93,"#bf{CMS} #scale[0.75]{#it{Preliminary}}");
-    lat3->DrawLatex(0.13,0.93,"#bf{CMS}"); // for the paper
+    lat3->DrawLatex(0.13,0.93,"#bf{CMS} #scale[0.75]{#it{Preliminary}}");
+    //lat3->DrawLatex(0.13,0.93,"#bf{CMS}"); // for the paper
     
     TLatex *mytext = new TLatex();
     mytext->SetTextSize(0.055);
     mytext->SetNDC();
-    mytext->DrawLatex(0.6,0.93,Form(" %.1f fb^{-1} (13#scale[0.75]{ }TeV)",intLumi_));        
+    //mytext->DrawLatex(0.6,0.93,Form(" %.1f fb^{-1} (13#scale[0.75]{ }TeV)",intLumi_));        
+    mytext->DrawLatex(0.5,0.93,Form(" %.1f fb^{-1} (13#scale[0.75]{ }TeV, 2016)",intLumi_)); //FIXME
+    //mytext->DrawLatex(0.5,0.93,Form(" %.1f fb^{-1} (13#scale[0.75]{ }TeV, 2017)",intLumi_)); //FIXME
     mytext->DrawLatex(0.129+0.03,0.85,"H#rightarrow#gamma#gamma");
     
     std::cout << "[INFO]  now do lower ratio plot " << std::endl; 

@@ -10,31 +10,27 @@ dir=$2
 ((startIndex=$1*10000))
 index=$startIndex
 
+STOREDIR="/eos/home-e/escott/Stage1STXS/Pass7/ToysForSplusB" #FIXME should be made configurable
+
 cd $dir
 eval `scramv1 runtime -sh`
 
-
 while (( $index < $startIndex+ $nToys)); 
 do
-echo "---> combine cms_hgg_datacard_FiducialRDiffXsScan_postFit.root -m $MHhat --snapshotName MultiDimFit -M GenerateOnly --saveWorkspace --toysFrequentist --bypassFrequentistFit -t 1 --expectSignal=$Muhat -n combout_step0_$index -s -1"
-combine inputfile.root  -m $MHhat --snapshotName MultiDimFit -M GenerateOnly --saveWorkspace --toysFrequentist --bypassFrequentistFit -t 1 --expectSignal=$Muhat -n combout_step0_$index -s -1
+echo "combine $STOREDIR/inputfile.root  -m $MHhat --snapshotName MultiDimFit -M GenerateOnly --toysFrequentist --bypassFrequentistFit -t 1 --expectSignal=$Muhat -n combout_step0_$index --saveToys -s -1"
+combine $STOREDIR/inputfile.root  -m $MHhat --snapshotName MultiDimFit -M GenerateOnly --toysFrequentist --bypassFrequentistFit -t 1 --expectSignal=$Muhat -n combout_step0_$index --saveToys -s -1
 
-ls higgsCombinecombout_step0_${1}*.root
-mv higgsCombinecombout_step0_${1}*.root higgsCombinecombout_step0_done_$index.root
+mv higgsCombinecombout_step0_${index}.GenerateOnly*.root $STOREDIR/higgsCombinecombout_step0_done_$index.root
 
-echo "---> combine higgsCombinecombout_step0_done_$index.root -m $MHhat -M MultiDimFit --floatOtherPOIs=1 --saveWorkspace --toysFrequentist --bypassFrequentistFit -t 1 --expectSignal=$Muhat -n combout_step1_$index -s -1"
-combine higgsCombinecombout_step0_done_$index.root -m $MHhat -M MultiDimFit --floatOtherPOIs=1 --saveWorkspace --toysFrequentist --bypassFrequentistFit -t 1 --expectSignal=$Muhat -n combout_step1_$index -s -1
-#combine higgsCombinecombout_step0_done_$index.root -m $MHhat -M MultiDimFit --floatOtherPOIs=1 --saveWorkspace --toysFrequentist --bypassFrequentistFit  --expectSignal=$Muhat -n combout_step1_$index 
+echo "combine $STOREDIR/inputfile.root --toysFile $STOREDIR/higgsCombinecombout_step0_done_$index.root -m $MHhat -M MultiDimFit -P r --floatOtherPOIs=1 --saveWorkspace -t 1 -n combout_step1_$index"
+combine $STOREDIR/inputfile.root --toysFile $STOREDIR/higgsCombinecombout_step0_done_$index.root -m $MHhat -M MultiDimFit -P r --floatOtherPOIs=1 --saveWorkspace -t 1 -n combout_step1_$index
 
-ls higgsCombinecombout_step1_${1}*.root
-mv higgsCombinecombout_step1_${1}*.root higgsCombinecombout_step1_done_$index.root
+mv higgsCombinecombout_step1_${index}.MultiDimFit*.root $STOREDIR/higgsCombinecombout_step1_done_$index.root
 
-echo "---> combine higgsCombinecombout_step1_done_$index.root -m $MHhat --snapshotName MultiDimFit -M GenerateOnly --saveToys --toysFrequentist --bypassFrequentistFit -t -1 -n combout_step2_$index"
-combine higgsCombinecombout_step1_done_$index.root -m $MHhat --snapshotName MultiDimFit -M GenerateOnly --saveToys --toysFrequentist --bypassFrequentistFit -t -1 -n combout_step2_$index
+echo "combine $STOREDIR/higgsCombinecombout_step1_done_$index.root -m $MHhat --snapshotName MultiDimFit -M GenerateOnly --saveToys -t -1 -n combout_step2_$index --expectSignal=0"
+combine $STOREDIR/higgsCombinecombout_step1_done_$index.root -m $MHhat --snapshotName MultiDimFit -M GenerateOnly --saveToys -t -1 -n combout_step2_$index --expectSignal=0
 
-ls higgsCombinecombout_step2_${1}*.root
-mv higgsCombinecombout_step2_${1}*.root higgsCombinecombout_step2_done_$index.root
+mv higgsCombinecombout_step2_${index}.GenerateOnly*.root $STOREDIR/higgsCombinecombout_step2_done_$index.root
 
 (( index=$index+1))
 done;
-

@@ -1,0 +1,35 @@
+##-- The purpose of these steps are to perform bias studies on a low statistics background model in order to quantify 
+# the level of 'bias' in the background model, based on how much the expected signal strength varies 
+# from background model toys 
+
+##-- Begin with full semi-leptonic datacard (4 categories)
+##-- Create datacard for most sensitive category, where there should be lowest number of data sideband events 
+
+combineCards.py SL_AN_20_165_v5.txt --ic HHWWggTag_SLDNN_0 > SL_AN_20_165_v5_HHWWggTag_SLDNN_0.txt
+
+##-- Then make sure to remove the extra discrete nuisance parameters from the single category datacard 
+pdfindex_HHWWggTag_SLDNN_0_13TeV  discrete
+pdfindex_HHWWggTag_SLDNN_3_13TeV  discrete ##-- remove 
+pdfindex_HHWWggTag_SLDNN_1_13TeV  discrete ##-- remove 
+pdfindex_HHWWggTag_SLDNN_2_13TeV  discrete ##-- remove 
+
+##-- Compute expected limit in order to know which expected mu to use 
+combine SL_AN_20_165_v5_HHWWggTag_SLDNN_0.txt -m 125.38 -M AsymptoticLimits --run=blind -t -1 --setParameters MH=125.38 --freezeParameters MH --cminDefaultMinimizerStrategy 0 --cminFallbackAlgo Minuit2,Migrad,0:0.1 --X-rt MINIMIZER_freezeDisassociatedParams --X-rtd MINIMIZER_multiMin_hideConstants --X-rtd MINIMIZER_multiMin_maskConstraints --X-rtd MINIMIZER_multiMin_maskChannels=2
+
+#  -- AsymptoticLimits ( CLs ) --
+# Expected  2.5%: r < 49.1641
+# Expected 16.0%: r < 70.0244
+# Expected 50.0%: r < 108.5000
+# Expected 84.0%: r < 173.3728
+# Expected 97.5%: r < 267.5533
+
+##-- Create workspace version of datacard 
+text2workspace.py SL_AN_20_165_v5_HHWWggTag_SLDNN_0.txt
+
+##-- Create toys 
+./RunBiasStudy.py -d SL_AN_20_165_v5_HHWWggTag_SLDNN_0.root -t --nToys 5 --expectSignal 108.5 --mH 125.38
+
+##-- 
+./RunBiasStudy.py -d SL_AN_20_165_v5_HHWWggTag_SLDNN_0.root -f --nToys 5 --mH 125.38 --expectSignal 108.5 -c "--setParameters MH=125.38 --freezeParameters MH --cminDefaultMinimizerStrategy 0 --cminFallbackAlgo Minuit2,Migrad,0:0.1 --X-rt MINIMIZER_freezeDisassociatedParams --X-rtd MINIMIZER_multiMin_hideConstants --X-rtd MINIMIZER_multiMin_maskConstraints --X-rtd MINIMIZER_multiMin_maskChannels=2" 
+
+./RunBiasStudy.py -d SL_AN_20_165_v5_HHWWggTag_SLDNN_0.root -p --gaussianFit

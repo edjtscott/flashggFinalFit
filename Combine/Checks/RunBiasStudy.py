@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 from biasUtils import *
 
 from optparse import OptionParser
@@ -29,6 +28,8 @@ r.gStyle.SetOptStat(2211)
 
 ws = r.TFile(opts.datacard).Get(opts.workspace)
 
+# print("ws:",ws)
+
 pdfs = rooArgSetToList(ws.allPdfs())
 multipdfName = None
 for pdf in pdfs:
@@ -56,7 +57,7 @@ for ipdf in range(multipdf.getNumPdfs()):
     indexNameMap[ipdf] = multipdf.getPdf(ipdf).GetName()
 
 if opts.toys:
-    if not path.isdir('BiasToysn'): system('mkdir -p BiasToys')
+    if not os.path.isdir('BiasToysn'): os.system('mkdir -p BiasToys')
     toyCmdBase = 'combine -m %.4f -d %s -M GenerateOnly --expectSignal %.4f -s %g --saveToys %s '%(opts.mH, opts.datacard, opts.expectSignal, opts.seed, opts.combineOptions)
     for ipdf,pdfName in indexNameMap.iteritems():
         name = shortName(pdfName)
@@ -64,15 +65,15 @@ if opts.toys:
             for isplit in range(opts.nToys//opts.split):
                 toyCmd = toyCmdBase + ' -t %g -n _%s_split%g --setParameters %s=%g --freezeParameters %s'%(opts.split, name, isplit, indexName, ipdf, indexName)
                 run(toyCmd, dry=opts.dryRun)
-                system('mv higgsCombine_%s* %s'%(name, toyName(name,split=isplit)))
+                os.system('mv higgsCombine_%s* %s'%(name, toyName(name,split=isplit)))
         else: 
             toyCmd = toyCmdBase + ' -t %g -n _%s --setParameters %s=%g --freezeParameters %s'%(opts.nToys, name, indexName, ipdf, indexName)
             run(toyCmd, dry=opts.dryRun)
-            system('mv higgsCombine_%s* %s'%(name, toyName(name)))
+            os.system('mv higgsCombine_%s* %s'%(name, toyName(name)))
 print
 
 if opts.fits:
-    if not path.isdir('BiasFits'): system('mkdir -p BiasFits')
+    if not os.path.isdir('BiasFits'): os.system('mkdir -p BiasFits')
     fitCmdBase = 'combine -m %.4f -d %s -M MultiDimFit -P %s --algo singles %s '%(opts.mH, opts.datacard, opts.poi, opts.combineOptions)
     for ipdf,pdfName in indexNameMap.iteritems():
         name = shortName(pdfName)
@@ -80,19 +81,30 @@ if opts.fits:
             for isplit in range(opts.nToys//opts.split):
                 fitCmd = fitCmdBase + ' -t %g -n _%s_split%g --toysFile=%s'%(opts.split, name, isplit, toyName(name,split=isplit))
                 run(fitCmd, dry=opts.dryRun)
-                system('mv higgsCombine_%s* %s'%(name, fitName(name,split=isplit)))
+                os.system('mv higgsCombine_%s* %s'%(name, fitName(name,split=isplit)))
             run('hadd %s BiasFits/*%s*split*.root'%(fitName(name),name), dry=opts.dryRun)
         else:
             fitCmd = fitCmdBase + ' -t %g -n _%s --toysFile=%s'%(opts.nToys, name, toyName(name))
             run(fitCmd, dry=opts.dryRun)
-            system('mv higgsCombine_%s* %s'%(name, fitName(name)))
+            os.system('mv higgsCombine_%s* %s'%(name, fitName(name)))
 
 if opts.plots:
-    if not path.isdir('BiasPlots'): system('mkdir -p BiasPlots')
+    if not os.path.isdir('BiasPlots'): os.system('mkdir -p BiasPlots')
     for ipdf,pdfName in indexNameMap.iteritems():
         name = shortName(pdfName)
         tfile = r.TFile(fitName(name))
+        print("tfile:",tfile)
+        # skips = ["bern", "exp", "pow"]
+        skips = ["bern"]
+        dontPlot = 0
+        for skip in skips:
+            if skip in fitName(name):
+                dontPlot = 1 
+        if(dontPlot == 1): 
+            print("SKIPPING by hand")
+            continue 
         tree = tfile.Get('limit')
+        print("tree:",tree)
         pullHist = r.TH1F('pullsForTruth_%s'%name, 'Pull distribution using the envelope to fit %s'%name, 80, -4., 4.)
         pullHist.GetXaxis().SetTitle('Pull')
         pullHist.GetYaxis().SetTitle('Entries')
@@ -121,5 +133,6 @@ if opts.plots:
         if opts.gaussianFit:
            r.gStyle.SetOptFit(111)
            pullHist.Fit('gaus')
-        canv.SaveAs('%s.pdf'%plotName(name))
-        canv.SaveAs('%s.png'%plotName(name))
+        outDir = "/eos/user/a/atishelm/www/HHWWgg/SL_Bias_Test/"
+        canv.SaveAs('%s/%s.pdf'%(outDir, plotName(name)))
+        canv.SaveAs('%s/%s.png'%(outDir, plotName(name)))

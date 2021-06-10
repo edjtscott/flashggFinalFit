@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from biasUtils import *
-
 from optparse import OptionParser
+
 parser = OptionParser()
 parser.add_option("-d","--datacard",default="Datacard.root")
 parser.add_option("-w","--workspace",default="w")
@@ -10,6 +10,8 @@ parser.add_option("-n","--nToys",default=1000,type="int")
 parser.add_option("-f","--fits",action="store_true", default=False)
 parser.add_option("-p","--plots",action="store_true", default=False)
 parser.add_option("-e","--expectSignal",default=1.,type="float")
+parser.add_option("--rMin",default=-5,type="float") ##-- rmin for fitting 
+parser.add_option("--rMax",default=20.,type="float") ##-- rmax for fitting 
 parser.add_option("-m","--mH",default=125.,type="float")
 parser.add_option("-c","--combineOptions",default="")
 parser.add_option("-s","--seed",default=-1,type="int")
@@ -27,8 +29,6 @@ r.gROOT.SetBatch(True)
 r.gStyle.SetOptStat(2211)
 
 ws = r.TFile(opts.datacard).Get(opts.workspace)
-
-# print("ws:",ws)
 
 pdfs = rooArgSetToList(ws.allPdfs())
 multipdfName = None
@@ -56,9 +56,10 @@ for ipdf in range(multipdf.getNumPdfs()):
         if not multipdf.getPdf(ipdf).GetName().count(opts.selectFunction): continue
     indexNameMap[ipdf] = multipdf.getPdf(ipdf).GetName()
 
+##-- Generate toys 
 if opts.toys:
-    if not os.path.isdir('BiasToysn'): os.system('mkdir -p BiasToys')
-    toyCmdBase = 'combine -m %.4f -d %s -M GenerateOnly --expectSignal %.4f -s %g --saveToys %s '%(opts.mH, opts.datacard, opts.expectSignal, opts.seed, opts.combineOptions)
+    if not os.path.isdir('BiasToys'): os.system('mkdir -p BiasToys')
+    toyCmdBase = 'combine -m %.4f -d %s -M GenerateOnly --expectSignal %.4f --rMin %.4f --rMax %.4f -s %g --saveToys %s '%(opts.mH, opts.datacard, opts.expectSignal, opts.rMin, opts.rMax, opts.seed, opts.combineOptions)
     for ipdf,pdfName in indexNameMap.iteritems():
         name = shortName(pdfName)
         if opts.nToys > opts.split:
@@ -74,7 +75,7 @@ print
 
 if opts.fits:
     if not os.path.isdir('BiasFits'): os.system('mkdir -p BiasFits')
-    fitCmdBase = 'combine -m %.4f -d %s -M MultiDimFit -P %s --algo singles %s '%(opts.mH, opts.datacard, opts.poi, opts.combineOptions)
+    fitCmdBase = 'combine -m %.4f -d %s -M MultiDimFit -P %s --algo singles %s --rMin %.4f --rMax %.4f '%(opts.mH, opts.datacard, opts.poi, opts.combineOptions, opts.rMin, opts.rMax)
     for ipdf,pdfName in indexNameMap.iteritems():
         name = shortName(pdfName)
         if opts.nToys > opts.split:
@@ -93,9 +94,9 @@ if opts.plots:
     for ipdf,pdfName in indexNameMap.iteritems():
         name = shortName(pdfName)
         tfile = r.TFile(fitName(name))
-        print("tfile:",tfile)
         # skips = ["bern", "exp", "pow"]
-        skips = ["bern"]
+        # skips = ["bern"]
+        skips = [] 
         dontPlot = 0
         for skip in skips:
             if skip in fitName(name):
@@ -105,7 +106,8 @@ if opts.plots:
             continue 
         tree = tfile.Get('limit')
         print("tree:",tree)
-        pullHist = r.TH1F('pullsForTruth_%s'%name, 'Pull distribution using the envelope to fit %s'%name, 80, -4., 4.)
+        # pullHist = r.TH1F('pullsForTruth_%s'%name, 'Pull distribution using the envelope to fit %s'%name, 80, -4., 4.)
+        pullHist = r.TH1F('pullsForTruth_%s'%name, 'Pull distribution using the envelope to fit %s'%name, 80, -50., 50.)
         pullHist.GetXaxis().SetTitle('Pull')
         pullHist.GetYaxis().SetTitle('Entries')
         for itoy in range(opts.nToys):
@@ -127,12 +129,20 @@ if opts.plots:
             diff = bf - opts.expectSignal
             unc = 0.5 * (hi-lo)
             if unc > 0.: 
-                pullHist.Fill(diff/unc)
+                # print("bf:",bf)
+                # print("unc:",unc)
+                # print("float(diff/unc):",float(diff/unc))
+                pullHist.Fill(float(diff/unc))
         canv = r.TCanvas()
         pullHist.Draw()
         if opts.gaussianFit:
+           print("Doing gaussian fit")
            r.gStyle.SetOptFit(111)
-           pullHist.Fit('gaus')
-        outDir = "/eos/user/a/atishelm/www/HHWWgg/SL_Bias_Test/"
+           initial_mu, initial_sig = 2, 2
+           f1 = r.TF1("f1", "gaus", initial_mu, initial_sig)
+        #    TF1 *f1 = new TF1("f1", "gaus", 1, 3);
+           pullHist.Fit("f1", "R")
+        #    pullHist.Fit('gaus')
+        outDir = "/eos/user/a/atishelm/www/HHWWgg/Bias_Studies/"
         canv.SaveAs('%s/%s.pdf'%(outDir, plotName(name)))
         canv.SaveAs('%s/%s.png'%(outDir, plotName(name)))
